@@ -181,6 +181,59 @@ st.sidebar.markdown(f"""
 - State FIPS: `{state_fips}`
 """)
 
+st.sidebar.divider()
+
+# Operator/Owner Selection
+st.sidebar.header("👤 Project Details")
+
+operators = [
+    'Energix',
+    'NextEra Energy',
+    'First Solar',
+    'SunPower',
+    'Cypress Creek',
+    'Duke Energy',
+    'Clearway Energy',
+    'Tesla Energy',
+    'Enel Green Power',
+    'Invenergy',
+    'Custom/Other'
+]
+
+selected_operator = st.sidebar.selectbox(
+    "Operator/Owner",
+    options=operators,
+    help="Select the project operator or owner"
+)
+
+# If custom, allow text input
+if selected_operator == 'Custom/Other':
+    custom_operator = st.sidebar.text_input("Enter Operator Name", value="")
+    if custom_operator:
+        selected_operator = custom_operator
+
+# Project stage selection
+project_stage = st.sidebar.selectbox(
+    "Project Stage",
+    options=[
+        'Pre-Development',
+        'Site Analysis',
+        'Permitting',
+        'Construction',
+        'Operational',
+        'Decommissioned'
+    ],
+    help="Current stage of the solar project"
+)
+
+st.sidebar.markdown(f"""
+**Project Info:**
+- Operator: **{selected_operator}**
+- Stage: **{project_stage}**
+""")
+
+st.sidebar.divider()
+
 if st.sidebar.button("🔄 Refresh All Data"):
     st.cache_data.clear()
     st.rerun()
