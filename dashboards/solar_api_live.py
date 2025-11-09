@@ -26,7 +26,9 @@ st.set_page_config(
 NREL_API_KEY = os.getenv('NREL_API_KEY', st.secrets.get('NREL_API_KEY', ''))
 CENSUS_API_KEY = os.getenv('CENSUS_API_KEY', st.secrets.get('CENSUS_API_KEY', ''))
 FRED_API_KEY = os.getenv('FRED_API_KEY', st.secrets.get('FRED_API_KEY', ''))
-MAPBOX_API_KEY = os.getenv('MAPBOX_API_KEY', st.secrets.get('MAPBOX_API_KEY', ''))
+# Support both MAPBOX_ACCESS_TOKEN and MAPBOX_API_KEY naming conventions
+MAPBOX_API_KEY = os.getenv('MAPBOX_ACCESS_TOKEN', os.getenv('MAPBOX_API_KEY',
+                 st.secrets.get('MAPBOX_ACCESS_TOKEN', st.secrets.get('MAPBOX_API_KEY', ''))))
 
 # Custom CSS
 st.markdown("""
