@@ -2,17 +2,47 @@
 
 Interactive geospatial dashboards powered by Streamlit, integrated with Geospatial Solutions website.
 
+## 🚀 Live Dashboards
+
+- **Solar API Live:** [solar-api-live.streamlit.app](https://solar-api-live.streamlit.app/)
+- **Solar Portfolio:** [solar-portfolio.streamlit.app](https://solar-portfolio.streamlit.app/)
+- **Real Estate Suitability:** [real-estate-suitability.streamlit.app](https://real-estate-suitability.streamlit.app/)
+- **Interconnection Queue:** (Deploy with your substation data)
+
+**Embedded in website:** [geospatialsolutions.co/solutions/interactive-dashboards/demo](https://geospatialsolutions.co/solutions/interactive-dashboards/demo)
+
 ## Available Dashboards
 
-1. **Solar Portfolio Dashboard** (`dashboards/solar_portfolio.py`)
-   - Real-time solar project monitoring
-   - Uses: NREL Solar API, Mapbox, Census API
-   - 3D map visualization with PyDeck
+### 1. Solar API Live (`dashboards/solar_api_live.py`) ✅ LIVE
+   - **Real-time data** from NREL, Census, FRED APIs
+   - **Operator/Owner dropdown** (Energix, NextEra, etc.)
+   - **Project stage tracking** (Pre-Dev to Operational)
+   - **3D PyDeck maps** with satellite imagery
+   - **Financial feasibility calculator**
+   - **Live API status monitoring**
 
-2. **Real Estate Suitability** (`dashboards/real_estate_suitability.py`)
-   - Buildable land constraint analysis
-   - Uses: Census API, Mapbox, Google Maps API
+### 2. Solar Portfolio Dashboard (`dashboards/solar_portfolio.py`) ✅ LIVE
+   - Portfolio-level project monitoring
+   - 50+ solar projects across 12 states
+   - AI-powered insights with Claude
+   - Weather risk alerts
+   - Permit status tracking
+
+### 3. Real Estate Suitability (`dashboards/real_estate_suitability.py`) ✅ LIVE
+   - Automated buildable land analysis
+   - 200 parcels analyzed in 12 minutes
+   - Constraint detection (flood, wetlands, slope, zoning)
+   - AI-powered recommendations
    - Multi-criteria suitability scoring
+
+### 4. Interconnection Queue (`dashboards/interconnection_queue.py`) 🆕
+   - **Track solar projects by substation**
+   - **Transmission line visualization**
+   - **Filter by operator, status, capacity**
+   - **3D column charts scaled by MW**
+   - **Timeline view: Queue date → COD**
+   - **Upload your own CSV/Excel queue data**
+   - **Export filtered results**
 
 ## Setup
 
