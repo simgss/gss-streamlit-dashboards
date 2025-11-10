@@ -257,7 +257,7 @@ if len(filtered_df) > 0 and MAPBOX_API_KEY:
         'Withdrawn': [239, 68, 68],  # Red
     }
 
-    map_data['color'] = map_data['status'].map(lambda x: status_colors.get(x, [128, 128, 128]))
+    map_data['color'] = map_data['status'].apply(lambda x: status_colors.get(x, [128, 128, 128]))
     map_data['radius'] = map_data['capacity_mw'] * 50  # Scale by capacity
 
     # Create map view
