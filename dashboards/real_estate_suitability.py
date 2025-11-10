@@ -68,19 +68,48 @@ def load_parcel_data():
         constrained_acres = flood_acres + wetland_acres + steep_slope_acres + setback_acres
         buildable_acres = max(0, total_acres - constrained_acres)
 
-        # Suitability score (0-100)
+        # Multi-factor suitability score (0-100) with weighted criteria
+        # Factor 1: Buildable Ratio (40% weight)
         buildable_ratio = buildable_acres / total_acres
-        score = int(buildable_ratio * 100)
+        buildable_score = buildable_ratio * 40
 
-        # Recommendation
-        if buildable_acres >= 5:
-            recommendation = 'GO'
-            color = [16, 185, 129, 200]  # Green
-        elif buildable_acres >= 2:
+        # Factor 2: Absolute Buildable Area (30% weight) - More acres = better
+        # Score max at 10+ acres, min at 0
+        absolute_buildable_score = min(buildable_acres / 10, 1.0) * 30
+
+        # Factor 3: Constraint Diversity (15% weight) - Fewer constraint types = better
+        constraint_types = sum([
+            flood_acres > 0,
+            wetland_acres > 0,
+            steep_slope_acres > 0
+        ])
+        constraint_diversity_score = (1 - constraint_types / 3) * 15
+
+        # Factor 4: Total Parcel Size (15% weight) - Larger parcels more valuable
+        # Score max at 20+ acres
+        size_score = min(total_acres / 20, 1.0) * 15
+
+        # Combined weighted score
+        score = int(buildable_score + absolute_buildable_score + constraint_diversity_score + size_score)
+
+        # Detailed breakdown for tooltip/analysis
+        score_breakdown = f"Buildable Ratio: {buildable_score:.0f}/40 | Area: {absolute_buildable_score:.0f}/30 | Constraints: {constraint_diversity_score:.0f}/15 | Size: {size_score:.0f}/15"
+
+        # Recommendation based on multi-criteria
+        if score >= 70 and buildable_acres >= 5:
+            recommendation = 'STRONG BUY'
+            color = [16, 185, 129, 200]  # Bright Green
+        elif score >= 55 and buildable_acres >= 3:
+            recommendation = 'BUY'
+            color = [52, 211, 153, 200]  # Light Green
+        elif score >= 40 and buildable_acres >= 1.5:
             recommendation = 'CONDITIONAL'
-            color = [245, 158, 11, 200]  # Yellow/Orange
+            color = [245, 158, 11, 200]  # Orange
+        elif score >= 25:
+            recommendation = 'RISKY'
+            color = [251, 146, 60, 200]  # Light Orange
         else:
-            recommendation = 'NO-GO'
+            recommendation = 'AVOID'
             color = [239, 68, 68, 200]  # Red
 
         # Zoning
@@ -99,7 +128,9 @@ def load_parcel_data():
             'slope_acres': round(steep_slope_acres, 2),
             'setback_acres': round(setback_acres, 2),
             'buildable_acres': round(buildable_acres, 2),
+            'buildable_ratio': round(buildable_ratio * 100, 1),
             'suitability_score': score,
+            'score_breakdown': score_breakdown,
             'recommendation': recommendation,
             'zoning': zoning,
             'cost_per_acre': round(cost_per_acre, 0),
@@ -123,6 +154,36 @@ st.markdown("""
 
 # Sidebar - Filters
 st.sidebar.header("🔍 Suitability Filters")
+
+# Scoring methodology expander
+with st.sidebar.expander("📊 How Scoring Works", expanded=False):
+    st.markdown("""
+    **Multi-Factor Weighted Scoring (0-100):**
+
+    1. **Buildable Ratio** (40 pts)
+       - % of parcel that's buildable
+       - Higher ratio = better score
+
+    2. **Absolute Area** (30 pts)
+       - Total buildable acres
+       - Rewards larger buildable areas
+       - Maxes at 10+ acres
+
+    3. **Constraint Diversity** (15 pts)
+       - Fewer constraint types = better
+       - Penalizes multiple issues
+
+    4. **Total Parcel Size** (15 pts)
+       - Larger parcels preferred
+       - Maxes at 20+ acres
+
+    **Recommendations:**
+    - **STRONG BUY** (70+, 5+ buildable acres)
+    - **BUY** (55+, 3+ buildable acres)
+    - **CONDITIONAL** (40+, 1.5+ buildable acres)
+    - **RISKY** (25+)
+    - **AVOID** (<25)
+    """)
 
 min_buildable = st.sidebar.slider(
     "Minimum Buildable Acres",
@@ -149,8 +210,8 @@ selected_zoning = st.sidebar.multiselect(
 
 selected_recommendations = st.sidebar.multiselect(
     "Recommendations",
-    options=['GO', 'CONDITIONAL', 'NO-GO'],
-    default=['GO', 'CONDITIONAL']
+    options=['STRONG BUY', 'BUY', 'CONDITIONAL', 'RISKY', 'AVOID'],
+    default=['STRONG BUY', 'BUY', 'CONDITIONAL']
 )
 
 # Apply filters
@@ -165,10 +226,12 @@ filtered_df = df[
 col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
+    strong_buy_count = len(filtered_df[filtered_df['recommendation']=='STRONG BUY'])
+    buy_count = len(filtered_df[filtered_df['recommendation']=='BUY'])
     st.metric(
         label="Qualified Parcels",
         value=len(filtered_df),
-        delta=f"{len(filtered_df[filtered_df['recommendation']=='GO'])} GO parcels"
+        delta=f"{strong_buy_count + buy_count} Strong/Buy"
     )
 
 with col2:
@@ -244,18 +307,25 @@ with col_map:
         tooltip = {
             "html": """
             <b>{parcel_id}</b><br/>
-            <b>Suitability: {suitability_score}/100</b><br/>
-            Recommendation: <b>{recommendation}</b><br/>
-            Buildable: {buildable_acres} acres<br/>
-            Total: {total_acres} acres<br/>
+            <div style='background: linear-gradient(90deg, #10b981 0%, #059669 100%); padding: 5px; margin: 5px 0; border-radius: 3px;'>
+                <b style='font-size: 1.1em;'>Score: {suitability_score}/100</b> - {recommendation}
+            </div>
+            <b>Score Breakdown:</b><br/>
+            <small>{score_breakdown}</small><br/><br/>
+            <b>Parcel Details:</b><br/>
+            Buildable: {buildable_acres} acres ({buildable_ratio}%)<br/>
+            Total Size: {total_acres} acres<br/>
             Zoning: {zoning}<br/>
-            Cost: ${total_cost:,.0f}
+            Cost: ${total_cost:,.0f}<br/><br/>
+            <b>Constraints:</b><br/>
+            Flood: {flood_acres} ac | Wetland: {wetland_acres} ac | Slope: {slope_acres} ac
             """,
             "style": {
-                "backgroundColor": "steelblue",
+                "backgroundColor": "#1e293b",
                 "color": "white",
-                "padding": "10px",
-                "borderRadius": "5px"
+                "padding": "12px",
+                "borderRadius": "8px",
+                "fontSize": "12px"
             }
         }
 
